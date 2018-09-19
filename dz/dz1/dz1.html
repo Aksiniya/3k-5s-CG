@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Домашнаяя работа№1 </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    </head>
+    
+    <body>
+        <h1>Домашнаяя работа №1</h1>
+
+        <div class="colorBlock">
+            <div class="setColor">
+                <p>R: <input id="red" type="range" min="0" max="255"  step="1" value="0" oninput="setColor()"> </p>
+                <p>G: <input id="green" type="range" min="0" max="255" step="1" value="0" oninput="setColor()"> </p>
+                <p>B: <input id="blue" type="range" min="0" max="255" step="1" value="0" oninput="setColor()"> </p>
+                <p>Цвет: <span id="redCount"></span>, <span id="greenCount"></span>, <span id="blueCount"></span></p>
+            </div>
+            <div class="showColor">
+                <canvas id="selectedColor" width="50" height="50"></canvas>
+            </div>
+            <div class="clr">
+            </div>
+        </div>
+        
+        <h1 id="loader1"></h1>
+        
+        <p>Скорость вращения: (от быстрого к медленному) <input id="speed" type="range" min="250" max="2500" step="50" oninput="setSpeed()"> </p>
+            <p>Текущая скорость: <span id="currenSpeed"></span></p>
+    </body>
+    
+    <style>
+        canvas {
+            border: 1px dashed black;
+        }
+        #loader1 {
+            font-size: 250%;
+            font-weight: bold;
+        }
+        .setColor{
+            width: auto;
+            float: left;
+        }
+        .showColor{
+            float: left;
+            padding: 50;
+        }
+        .clr {
+            clear: both;
+        }
+    </style>
+    
+    <script>
+        var currentRedCount = 0;
+        var redCountText = document.getElementById("redCount");
+        redCountText.innerHTML = currentRedCount;
+
+        var currentGreenCount = 0;
+        var greenCountText = document.getElementById("greenCount");
+        greenCountText.innerHTML = currentGreenCount;
+    
+        var currentBlueCount = 0;
+        var blueCountText = document.getElementById("blueCount");
+        blueCountText.innerHTML = currentBlueCount;
+    
+        var selectedColorCanvas = document.getElementById("selectedColor");
+        var contextColor = selectedColorCanvas.getContext("2d");
+        contextColor.fillStyle = "rgb(" + currentRedCount + "," + currentGreenCount + "," + currentBlueCount + ")";
+        contextColor.fillRect(0,0,50,50);
+        
+        var loader1 = document.getElementById("loader1");
+        
+        function setColor() {
+            var currentRedCount = document.getElementById("red").value;
+            redCountText.innerHTML = currentRedCount;
+            
+            var currentGreenCount = document.getElementById("green").value;
+            greenCountText.innerHTML = currentGreenCount;
+            
+            var currentBlueCount = document.getElementById("blue").value;
+            blueCountText.innerHTML = currentBlueCount;
+            
+            contextColor.fillStyle = "rgb(" + currentRedCount + "," + currentGreenCount + "," + currentBlueCount + ")";
+            contextColor.fillRect(0,0,50,50);
+            
+            loader1.style.color = "rgb(" + currentRedCount + "," + currentGreenCount + "," + currentBlueCount + ")";
+        }
+    
+        var loaderPosition = 0;
+        
+        function loader() {
+            switch(loaderPosition) {
+                case 0:
+                    loader1.innerHTML = "\/";
+                    break;
+                case 1:
+                    loader1.innerHTML = "–";
+                    break;
+                case 2:
+                    loader1.innerHTML = "\\";
+                    break;
+                case 3:
+                    loader1.innerHTML = "|";
+                    break;
+                default:
+                    loader1.innerHTML = "Error";
+                    break;
+            }
+            loaderPosition += 1;
+
+            if (loaderPosition==4) {
+                loaderPosition = 0;
+            }
+        }
+    
+        var currentSpeed = document.getElementById("speed").value;
+        var currentSpeedText = document.getElementById("currenSpeed");
+        var interval = setInterval(loader,currentSpeed);
+        
+        function setSpeed(){
+            currentSpeed = document.getElementById("speed").value;
+            currentSpeedText.innerHTML = currentSpeed;
+            clearInterval(interval);
+            interval = setInterval(loader,currentSpeed);
+        }
+    
+        setSpeed();
+    </script>
+</html>
