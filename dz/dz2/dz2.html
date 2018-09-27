@@ -1,1 +1,225 @@
+<!DOCTYPE html>
 
+<html>
+    <head>
+        <title>Домашнаяя работа№2 </title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    </head>
+
+    <body>
+        <h1>Домашнаяя работа №2</h1>
+        <div calass="image">
+            <p>До:</p>
+
+            <p><input id="loadButton"type="file" onchange="previewFile()"></p>
+            <div style="display: none">
+                <p><img id="img1" src="" alt="Before image:"></p>
+            </div>
+
+            <canvas id="imageBefore"> </canvas>
+        </div>
+        
+        <div calass="image">
+            <p>После:</p>
+            <canvas id="imageAfter"> </canvas>
+        </div>
+    </body>
+    
+    <style>
+        canvas {
+            border: 1px dashed black;
+        }
+    </style>
+
+    <script>
+        var canvas1 = document.getElementById("imageBefore");
+        var ctx1 = canvas1.getContext("2d");
+        var canvas2 = document.getElementById("imageAfter");
+        var ctx2 = canvas2.getContext("2d");
+        
+        var img1 = document.getElementById("img1");
+        var img1Height;
+        var img1Width;
+        var img1Data;
+        var data1;
+        
+        var img2Data;
+        var data2;
+        
+        function previewFile() {
+            var file = document.getElementById("loadButton").files[0];
+            var reader = new FileReader();
+            
+            reader.addEventListener("load", function () {
+                                    img1.src = reader.result;
+                                    }, false);
+                                    
+                                    if (file) {
+                                        reader.readAsDataURL(file);
+                                    }
+            img1.onload = function(){
+                img1Height = this.height;
+                img1Width = this.width;
+                loadCanvas();
+                ctx1.drawImage(img1, 0, 0);
+                
+                img1Data = ctx1.getImageData(0, 0, img1Width, img1Height);
+                data1 = img1Data.data;
+                img2Data = ctx2.getImageData(0, 0, img1Width, img1Height);
+                data2 = img2Data.data;
+                
+                drawFrame();
+                drawInFrame();
+                ctx2.putImageData(img2Data, 0, 0);
+            }
+        }
+    
+        function loadCanvas() {
+            canvas1.width = img1Width;
+            canvas1.height = img1Height;
+            canvas2.width = img1Width;
+            canvas2.height = img1Height;
+        }
+    
+        function drawFrame() {
+            for (var i = 1; i < img1Data.height-2; i++){
+                var LeftRedSum = 0;
+                var LeftGreenSum = 0;
+                var LeftBlueSum = 0;
+                var LeftAlphaSum = 0;
+                
+                var RightRedSum = 0;
+                var RightGreenSum = 0;
+                var RightBlueSum = 0;
+                var RightAlphaSum = 0;
+                
+                for (var line = 0; line < 3; line++) {
+                    for (var column =0; column < 2; column++) {
+                        LeftRedSum  = LeftRedSum + data1[0 + column*4 + line*img1Data.width*4];
+                        RightRedSum = RightRedSum + data1[0 + column*4 + line*img1Data.width*4 + (img1Data.width - 2)*4];
+                        LeftGreenSum  = LeftGreenSum + data1[1 + column*4 + line*img1Data.width*4];
+                        RightGreenSum = RightGreenSum + data1[1 + column*4 + line*img1Data.width*4 + (img1Data.width - 2)*4];
+                        LeftBlueSum = LeftBlueSum + data1[2 + column*4 + line*img1Data.width*4];
+                        RightBlueSum = RightBlueSum + data1[2 + column*4 + line*img1Data.width*4 + (img1Data.width - 2)*4];
+                        LeftAlphaSum = LeftAlphaSum + data1[3 + column*4 + line*img1Data.width*4];
+                        RightAlphaSum = RightAlphaSum + data1[3 + column*4 + line*img1Data.width*4 + (img1Data.width - 2)*4];
+                    }
+                }
+
+                data2[0 + i*img1Data.width*4] = LeftRedSum / 6;
+                data2[1 + i*img1Data.width*4] = LeftGreenSum / 6;
+                data2[2 + i*img1Data.width*4] = LeftBlueSum / 6;
+                data2[3 + i*img1Data.width*4] = LeftAlphaSum / 6;
+
+                data2[0 + i*img1Data.width*4 + (img1Data.width-1)*4] = RightRedSum / 6;
+                data2[1 + i*img1Data.width*4 + (img1Data.width-1)*4] = RightGreenSum / 6;
+                data2[2 + i*img1Data.width*4 + (img1Data.width-1)*4] = RightBlueSum / 6;
+                data2[3 + i*img1Data.width*4 + (img1Data.width-1)*4] = RightAlphaSum / 6;
+            }
+            
+            for(var i = 0; i < img1Data.width; i++) {
+                var TopRedSum = 0;
+                var TopGreenSum = 0;
+                var TopBlueSum = 0;
+                var TopAlphaSum = 0;
+                
+                var BottomRedSum = 0;
+                var BottomGreenSum = 0;
+                var BottomBlueSum = 0;
+                var BottomAlphaSum = 0;
+                
+                for (var column = -1; column <= 1; column++) {
+                    for (var line = 0; line < 2; line++) {
+                        if ( i == 0 ) {
+                            if (column == 0 || column == 1) {
+                                break;
+                            }
+                            TopRedSum = TopRedSum + data1[0 + line*img1Data.width*4] + data1[4+ line*img1Data.width*4];
+                            BottomRedSum  = BottomRedSum + data1[0 + (img1Data.height-2)*img1Data.width*4 + line*img1Data.width*4] + data1[4 + (img1Data.height-1)*img1Data.width*4];
+                            TopGreenSum = TopGreenSum + data1[1 + line*img1Data.width*4] + data1[5 + line*img1Data.width*4];
+                            BottomGreenSum = BottomGreenSum + data1[1 + (img1Data.height-2)*img1Data.width*4 + line*img1Data.width*4] + data1[5 + (img1Data.height-1)*img1Data.width*4];
+                            TopBlueSum = TopBlueSum + data1[2 + line*img1Data.width*4] + data1[6+ line*img1Data.width*4];
+                            BottomBlueSum  = BottomBlueSum + data1[2 + (img1Data.height-2)*img1Data.width*4 + line*img1Data.width*4] + data1[6 + (img1Data.height-1)*img1Data.width*4];
+                            TopAlphaSum = TopAlphaSum + data1[3 + line*img1Data.width*4] + data1[7+ line*img1Data.width*4];
+                            BottomAlphaSum  = BottomAlphaSum + data1[3 + (img1Data.height-2)*img1Data.width*4 + line*img1Data.width*4] + data1[7 + (img1Data.height-1)*img1Data.width*4];
+                            continue;
+                        }
+                        
+                        if ( i == data1.width - 1) {
+                            if (column == 0 || column == 1) {
+                                break;
+                            }
+                            TopRedSum = TopRedSum + data1[0 + line*img1Data.width*4 + (data1.width - 1 )] + data1[4+ line*img1Data.width*4 (data1.width - 1 )];
+                            BottomRedSum  = BottomRedSum + data1[0 + (img1Data.height-2)*img1Data.width*4 + line*data1.width*4 + (data1.width - 1 )] + data1[4 + (img1Data.height-2)*img1Data.width*4];
+                            TopGreenSum = TopGreenSum + data1[1 + line*img1Data.width*4 + (data1.width - 1 )] + data1[5+ line*img1Data.width*4 (data1.width - 1 )];
+                            BottomGreenSum  = BottomGreenSum + data1[1 + (img1Data.height-2)*img1Data.width*4 + line*data1.width*4 + (data1.width - 1 )] + data1[5 + (img1Data.height-2)*img1Data.width*4];
+                            TopBlueSum = TopBlueSum + data1[2 + line*img1Data.width*4 + (data1.width - 1 )] + data1[6+ line*img1Data.width*4 (data1.width - 1 )];
+                            BottomBlueSum  = BottomBlueSum + data1[2 + (img1Data.height-2)*img1Data.width*4 + line*data1.width*4 + (data1.width - 1 )] + data1[6 + (img1Data.height-2)*img1Data.width*4];
+                            TopAlphaSum = TopAlphaSum + data1[3 + line*img1Data.width*4 + (data1.width - 1 )] + data1[7+ line*img1Data.width*4 (data1.width - 1 )];
+                            BottomRedSum  = BottomRedSum + data1[3 + (img1Data.height-2)*img1Data.width*4 + line*data1.width*4 + (data1.width - 1 )] + data1[7 + (img1Data.height-2)*img1Data.width*4];
+                            continue;
+                        }
+                        
+                        TopRedSum = TopRedSum + data1[(i+column)*4 + line*img1Data.width*4];
+                        BottomRedSum = BottomRedSum + data1[(i+column)*4 + (img1Data.height - 1)*img1Data.width*4 - line*img1Data.width*4];
+                        TopGreenSum = TopGreenSum + data1[(i+column)*4 + 1 + line*img1Data.width*4];
+                        BottomGreenSum = BottomGreenSum + data1[(i+column)*4 + 1 + (img1Data.height - 1)*img1Data.width*4 - line*img1Data.width*4];
+                        TopBlueSum = TopBlueSum + data1[(i+column)*4 + 2 + line*img1Data.width*4];
+                        BottomBlueSum = BottomBlueSum + data1[(i+column)*4 + 2 + (img1Data.height - 1)*img1Data.width*4 - line*img1Data.width*4];
+                        TopAlphaSum = TopAlphaSum + data1[(i+column)*4 + 3 + line*img1Data.width*4];
+                        BottomAlphaSum = BottomAlphaSum + data1[(i+column)*4 + 3+ (img1Data.height - 1)*img1Data.width*4 - line*img1Data.width*4];
+                    }
+                }
+                
+                var CellsCount;
+                if ( i == 0 || i == data1.width - 1) {
+                    CellsCount = 4;
+                }
+                else {
+                    CellsCount = 6;
+                }
+
+                data2[i*4]     = TopRedSum / CellsCount;
+                data2[i*4 + 1] = TopGreenSum / CellsCount;
+                data2[i*4 + 2] = TopBlueSum / CellsCount;
+                data2[i*4 + 3] = TopAlphaSum / CellsCount;
+                
+                data2[i*4 +     img1Data.width*(img1Data.height-1)*4] = BottomRedSum / CellsCount;
+                data2[i*4 + 1 + img1Data.width*(img1Data.height-1)*4] = BottomGreenSum / CellsCount;
+                data2[i*4 + 2 + img1Data.width*(img1Data.height-1)*4] = BottomBlueSum / CellsCount;
+                data2[i*4 + 3 + img1Data.width*(img1Data.height-1)*4] = BottomAlphaSum / CellsCount;
+
+            }
+        }
+    
+        function drawInFrame() {
+            
+            for (var line = 1; line < img1Data.height -1; line++) {
+                var arrWidth = img1Data.width*4;
+                var _vectorPrev = data1.slice((line-1)*arrWidth, line*arrWidth);
+                var _vectorCurr = data1.slice(line*arrWidth, (line+1)*arrWidth);
+                var _vectorNext = data1.slice((line+1)*arrWidth, (line+2)*arrWidth);
+                for (var column = 1; column < img1Data.width - 1; column++) {
+                    var RedSum = 0;
+                    var GreenSum = 0;
+                    var BlueSum = 0;
+                    var AlphaSum = 0;
+                    
+                    for (var c = -1; c < 2 ; c++ ) {
+                        RedSum = RedSum + _vectorPrev[0+c*4+4*column] + _vectorCurr[0+c*4+4*column] + _vectorNext[0+c*4+4*column];
+                        GreenSum = GreenSum + _vectorPrev[1+c*4+4*column] + _vectorCurr[1+c*4+4*column] + _vectorNext[1+c*4+4*column];
+                        BlueSum = BlueSum + _vectorPrev[2+c*4+4*column] + _vectorCurr[2+c*4+4*column] + _vectorNext[2+c*4+4*column];
+                        AlphaSum = AlphaSum + _vectorPrev[3+c*4+4*column] + _vectorCurr[3+c*4+4*column] + _vectorNext[3+c*4+4*column];
+                    }
+                
+                data2[0 + arrWidth*line + 4*column] = RedSum / 9;
+                data2[1 + arrWidth*line + 4*column] = GreenSum / 9;
+                data2[2 + arrWidth*line + 4*column] = BlueSum / 9;
+                data2[3 + arrWidth*line + 4*column] = AlphaSum / 9;
+                }
+            }
+        }
+    
+    </script>
+    
+</html>
