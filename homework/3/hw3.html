@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Домашняя работа #3</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body>
+    <h1>Домашняя работа №3</h1>
+    <p>Линии:</p>
+    <canvas Line id="lineCanvas" width="400" height="400"></canvas Line>
+    <br>
+    <p>Окружности:</p>
+    <canvas Line id="circleCanvas" width="400" height="400"></canvas Line>
+</body>
+
+<style>
+    canvas {
+        border: 1px dashed black;
+    }
+</style>
+
+<script>
+    var canvasLine = document.getElementById("lineCanvas");
+    var canvasCircle = document.getElementById("circleCanvas");
+    var ctxLine = canvasLine.getContext("2d");
+    var ctxCircle = canvasCircle.getContext("2d");
+
+    var StartPositionXLine = 0;
+    var StartPositionYLine = 0;
+    var EndPositionXLine = 0;
+    var EndPositionYLine = 0;
+    var positionCounterLine = 0;
+
+    var StartPositionXCircle = 0;
+    var StartPositionYCircle = 0;
+    var EndPositionXCircle = 0;
+    var EndPositionYCircle = 0;
+    var positionCounterCircle = 0;
+
+    function onClickLine(event) {
+        if (positionCounterLine == 0) {
+            ctxLine.fillStyle = "rgb(100,200,100)";
+            ctxLine.fillRect(event.offsetX, event.offsetY, 3, 3);
+            StartPositionXLine = event.offsetX;
+            StartPositionYLine = event.offsetY;
+            positionCounterLine += 1;
+        }
+        else if (positionCounterLine == 1) {
+            ctxLine.fillStyle = "rgb(200,100,200)";
+            ctxLine.fillRect(event.offsetX, event.offsetY, 3, 3);
+            EndPositionXLine = event.offsetX;
+            EndPositionYLine = event.offsetY;
+            positionCounterLine = 0;
+            drawLine(StartPositionXLine, StartPositionYLine, EndPositionXLine, EndPositionYLine);
+        }
+    }
+
+    function onClickCircle(event){
+        if (positionCounterCircle == 0) {
+            ctxCircle.fillStyle = "rgb(100,200,100)";
+            ctxCircle.fillRect(event.offsetX, event.offsetY, 3, 3);
+            StartPositionXCircle = event.offsetX;
+            StartPositionYCircle = event.offsetY;
+            positionCounterCircle += 1;
+        }
+        else if (positionCounterCircle == 1) {
+            ctxCircle.fillStyle = "rgb(200,100,200)";
+            ctxCircle.fillRect(event.offsetX, event.offsetY, 3, 3);
+            EndPositionXCircle = event.offsetX;
+            EndPositionYCircle = event.offsetY;
+            positionCounterCircle = 0;
+            drawCircle(StartPositionXCircle, StartPositionYCircle, EndPositionXCircle, EndPositionYCircle);
+        }
+    }
+
+    function drawLine(startX, startY, endX, endY) {
+        var k = (startY-endY) / (endX-startX);
+
+        paintPoint(startX, startY, ctxLine);
+        var e = 0;
+        var step = 1;
+        var currentX;
+        var currentY;
+        var UpOrDown = 0;
+        var destination = 0;
+        var xStep = 0;
+        var yStep = 0;
+ 
+        if ( (k >= 1) || (k <= -1) ) {
+            destination = Math.abs(endY-startY);
+            k = (endX-startX) / (startY-endY);
+            yStep = 1;
+        }
+        else {
+            destination = Math.abs(endX-startX);
+            xStep = 1;
+        }
+
+        if ( k > 0) {
+            UpOrDown = -1;
+        } else if (k < 0) {
+            UpOrDown = 1;
+        } else if (k == 0) {
+            if (startY > endY) {
+                UpOrDown = -1;
+            }
+            else {
+                 UpOrDown = 1;
+            }
+        }
+
+        if ( (endX-startX) < 0 ) {
+            currentX = endX;
+            currentY = endY;
+        } else {
+            currentX = startX;
+            currentY = startY;
+        }
+
+        while (step < destination) {
+            e += k;
+
+            if (Math.abs(e) < 0.5) {
+                paintPoint(currentX+xStep, currentY+yStep*UpOrDown, ctxLine);
+            }
+            else {
+                paintPoint(currentX+1, currentY+UpOrDown, ctxLine);
+                currentY += UpOrDown * xStep;
+                currentX += yStep;
+                e += UpOrDown;
+            }
+            currentX += xStep;
+            currentY += yStep * UpOrDown;
+            step +=1;
+        }
+    }
+
+    function drawCircle(startX, startY, endX, endY) {
+                
+        var radius = Math.sqrt((endX - startX)*(endX - startX)+(endY - startY)*(endY - startY));
+        radius = Math.floor(radius);
+        var currentX = 0;
+        var currentY = radius;
+        var delta = 1 - 2*radius;
+        var e = 0;
+        while (currentY >= 0) {
+            paintPoint(startX + currentX, startY + currentY, ctxCircle);
+            // paintPoint(startX + currentY, startY + currentX, ctxCircle);
+            paintPoint(startX + currentX, startY - currentY, ctxCircle);
+            // paintPoint(startX - currentY, startY + currentX, ctxCircle);
+            paintPoint(startX - currentX, startY + currentY, ctxCircle);
+            // paintPoint(startX - currentY, startY - currentX, ctxCircle);
+            paintPoint(startX - currentX, startY - currentY, ctxCircle);
+            // paintPoint(startX + currentY, startY - currentX, ctxCircle);
+            e = 2*(delta + currentY) - 1;
+    
+            if ((e <= 0) && (delta < 0)) {
+                delta += 2*(++currentX) + 1;
+                continue;
+            }
+            if ((delta > 0) && (e > 0)) {
+                delta -= 2*(--currentY) + 1;
+                continue;
+            }
+            delta += 2*((currentX++) - ( --currentY))
+        }
+    }
+
+    function paintPoint(x, y, ctx){
+        ctx.fillStyle = "rgb(0,0,0)";
+        ctx.fillRect(x,y,1,1);
+    }
+
+    canvasLine.addEventListener("click", onClickLine, false);
+    canvasCircle.addEventListener("click", onClickCircle, false);
+</script>
+
+</html>
