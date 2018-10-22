@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Домашняя работа #4</title>
+</head>
+
+<body>
+    <h1>Домашняя работа №4</h1>
+    <p>По аналогии с медианным фильтром осуществить фильтрацию изображения фильтром <a href="https://ru.wikipedia.org/wiki/Оператор_Собеля">Собеля</a> для выделения границ.<br>
+        В качестве результата должно быть два изображени: исходное и после фильтрации. </p>
+    <p><input id="loadButton" type="file" onchange="previewFile()"></p>
+    <div style="display: none">
+        <img id="img1" src="" alt="BeforeImage">
+    </div>
+    <p>До:</p>
+    <canvas id="before"></canvas>
+    <p>После: <input type="button" value="Red" onclick="Sobel(0)"> <input type="button" value="Green" onclick="Sobel(1)"> <input type="button" value="Blue" onclick="Sobel(3)"> </p>
+    <canvas id="after"></canvas>
+</body>
+
+<script>
+    var canvas1 = document.getElementById("before");
+    var ctx1 = canvas1.getContext("2d");
+    var canvas2 = document.getElementById("after");
+    var ctx2 = canvas2.getContext("2d");
+    
+    var img1 = document.getElementById("img1");
+    var img1Height;
+    var img1Width;
+    
+    var img1Data;
+    var data1;
+    var img2Data;
+    var data2;
+    var grayData;
+
+    function previewFile() {
+        var file = document.getElementById("loadButton").files[0];
+        var reader = new FileReader();
+        
+        reader.addEventListener("load", function () {
+                                img1.src = reader.result;
+                                }, false);
+                                
+                                if (file) {
+                                    reader.readAsDataURL(file);
+                                }
+        img1.onload = function(){
+            img1Height = this.height;
+            img1Width = this.width;
+            loadCanvas();
+            ctx1.drawImage(img1, 0, 0);
+            
+            img1Data = ctx1.getImageData(0, 0, img1Width, img1Height);
+            data1 = img1Data.data;
+            img2Data = ctx2.getImageData(0, 0, img1Width, img1Height);
+            data2 = img2Data.data;
+            grayData = img2Data.data;
+            convertToGray();
+            Sobel(4);
+        }
+    }
+
+    function loadCanvas() {
+        canvas1.width = img1Width;
+        canvas1.height = img1Height;
+        canvas2.width = img1Width;
+        canvas2.height = img1Height;
+    }
+
+    function convertToGray() {
+        for (var i = 0; i < img1Height*img1Width*4; i=i+4) {
+            var commonSum = (data1[i] + data1[i+1] + data1[i+2]) / 3;
+            grayData[i] = grayData[i+1] = grayData[i+2] = commonSum;
+            grayData[i+3] = 255;
+        }
+    }
+
+    function Sobel(type) {
+        var vertical = [-1, -2, -1,
+                         0, 0, 0,
+                         1, 2, 1];
+        var horizontal =    [-1,0,1,
+                            -2,0,2,
+                            -1,0,1];
+        
+        for (var i = 0; i< img1Height*img1Width*4; i=i+4) {
+            var mask = [i-img1Width*4 -1, i-img1Width*4, i-img1Width*4 +1,
+                    i-4,              i,             i+4,
+                    i+img1Width*4 +1, i+img1Width*4, i+img1Width*4 +1
+            ];
+            var GY = 0, GX = 0;
+            for (var k = 0; k < 9; ++k) {
+                if ( (type > 3) || (type < 0) ) {
+                    GY += vertical[k]*grayData[mask[k]];
+                    GX += horizontal[k]*grayData[mask[k]];
+                }
+                else {
+                    GY += vertical[k]*data1[mask[k]+type];
+                    GX += horizontal[k]*data1[mask[k]+type];
+                }
+            }
+            var G = Math.sqrt(Math.pow(GX, 2)+Math.pow(GY,2));
+            data2[i] = data2[i+1] = data2[i+2] = G;
+            data2[i+3] = 255;
+        }
+        ctx2.putImageData(img2Data, 0, 0);
+    }
+
+</script>
+
+<style>
+    canvas {
+        border: 1px dashed black;
+    }
+</style>
+</html>
