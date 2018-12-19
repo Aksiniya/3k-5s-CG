@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Домашняя работа #6</title>
+</head>
+
+<body>
+    <h1>Домашняя работа #6</h1>
+    <p>Реализовать алгоритм отсечения отрезков произвольным выпуклым многоугольником по методу Цируса-Бека. 
+        С помощью мыши задается многоугольник и произвольный отрезок.
+        Необходимо отрисовать контур многоугольника и только ту часть отрезка, которая находится внутри многоугольника.</p> 
+
+    <div class="block">
+        <canvas id="mainCanvas" height="500" width="500"></canvas>
+    </div>
+
+    <div class="block">
+            <h3>Использование:</h3> 
+            <hr>
+            <ul style="text-align: left;">
+                <li>Кнопка "Линии": нарисовать необходимое количество линий двумя щелчками мыши.</li>
+                <li>Кнопка "Многоугольник": задать вершины прямоугольника n щелчками миши,<br> где n – количество вершин многоугольника.
+                <br>Правая кнопка мыши – отсечь линии.</li>
+            </ul>
+            <hr>
+            <div class = "buttons">
+                <button type="button" onclick="line()">Линии</button>  
+                <button type="button" onclick="polygon()">Многоугольник</button> 
+            </div>
+    </div>
+</body> 
+
+<script>
+		var ctx = document.getElementById('mainCanvas').getContext('2d');
+		mouse__coords = [];
+		lines = [];
+		poly = [];
+
+		function line()
+		{
+			mainCanvas.removeEventListener('click', polygonListener,false);
+			mainCanvas.addEventListener('click',lineListener,false);
+			mainCanvas.removeEventListener('contextmenu', polygonListener,false);
+		}
+		function polygon()
+		{
+			mainCanvas.removeEventListener('click', lineListener,false);
+			mainCanvas.addEventListener('click',polygonListener,false);
+			mainCanvas.addEventListener('contextmenu',polygonListener,false);
+		}
+
+		var lineListener = function(event)
+		{
+			process__mouse__click(event, 0);
+		}
+		var polygonListener = function(event)
+		{
+			process__mouse__click(event, 1);
+		}
+		function draw__pixel(pt)
+		{
+            ctx.fillStyle = "rgb(200,100,200)";
+			ctx.fillRect(pt[0]-1, pt[1]-1, 3, 3);
+		}
+		function process__mouse__click(event, type)
+		{
+			var x, y;
+			var rect = mainCanvas.getBoundingClientRect();
+			x = event.clientX - rect.left;
+			y = event.clientY - rect.top;
+			if(type == 0)
+			{
+				mouse__coords.push([x, y]);
+				lines.push([x, y]);
+				draw__pixel([x, y]);
+				if(mouse__coords.length == 2)
+				{
+					draw__line(mouse__coords[0], mouse__coords[1]);
+					mouse__coords = [];
+				}
+			}
+			else if(type == 1) {
+				event.preventDefault();
+				if(event.which == 1)
+				{
+					mouse__coords.push([x, y]);
+					poly.push([x, y]);
+					draw__pixel([x, y]);
+				}
+				else if(event.which == 3)
+				{
+					mouse__coords = [];
+					cyrus__beck();
+				}
+			}
+		}
+		function draw__line(pt1, pt2)
+		{
+			ctx.beginPath()
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = "black";
+			ctx.moveTo(pt1[0], pt1[1]);
+			ctx.lineTo(pt2[0], pt2[1]);
+			ctx.stroke();
+		}
+		function cyrus__beck()
+		{
+			ctx.clearRect(0,0,700,700);
+			orient = orientation();
+			for(let i = 0; i < lines.length; i+=2)
+			{
+				var t0 = 0, t1 = 1;
+				var flag = true;
+				for(var j = 0; j < poly.length; j++)
+				{
+					if(orient == 'anticlockwise')
+					{
+						if(j == poly.length - 1) var n = normal(poly[0],poly[j]);
+						else var n = normal(poly[j+1],poly[j]);
+					}
+					else if(orient == 'clockwise')
+					{
+						if(j == poly.length - 1) var n = normal(poly[j],poly[0]);
+						else var n = normal(poly[j],poly[j+1]);
+					}
+					else
+					{
+						alert('ERROR');
+						return;
+					}
+					var pn = scalar(delta(lines[i],lines[i+1]),n);
+					var qn = scalar(delta(poly[j],lines[i]),n);
+					if(pn != 0)
+					{
+						var t = -qn/pn;
+						if(pn < 0){
+							if(t < t1) t1 = t;
+						}
+						else{
+							if(t > t0) t0 = t;
+						}
+					}
+					else if(qn < 0) flag = false;
+				}
+				if(t0 > t1) flag = false;
+				if(flag){
+					draw__line(p_s(lines[i],lines[i+1],t0),(p_s(lines[i],lines[i+1],t1)));
+				}
+				for(let j = 0; j < poly.length - 1; j++) {
+					draw__line(poly[j], poly[j+1]);
+				}
+				draw__line(poly[0],poly[poly.length - 1]);
+			}
+			lines = [];
+			poly = [];
+		}
+		function orientation()
+		{
+			var product = [],
+			count = 0;
+			for(let i = 0; i < poly.length - 2; i++){
+				product.push(vector__product(delta(poly[i],poly[i+1]),delta(poly[i],poly[i+2])));
+			}
+			product.push(vector__product(delta(poly[poly.length - 2],poly[poly.length - 1]),delta(poly[poly.length - 2],poly[0])));
+			product.push(vector__product(delta(poly[poly.length - 1],poly[0]),delta(poly[poly.length - 1],poly[1])));
+			for(let j = 0; j < product.length; j++){
+				if(product[j]<0) count--;
+				else if(product[j]>0) count++; 
+			}
+			if(count == product.length) return 'anticlockwise';
+			else if(count == -product.length) return 'clockwise';
+			else return 'error';
+		}
+		function vector__product(pt1,pt2)
+		{
+			return pt1[0]*pt2[1]-pt2[0]*pt1[1];
+		}
+		function scalar(pt1,pt2)
+		{
+			return pt1[0]*pt2[0] + pt1[1]*pt2[1];
+		}
+		function delta(pt1,pt2)
+		{
+			return [pt2[0]-pt1[0],pt2[1]-pt1[1]];
+		}
+		function normal(pt1,pt2)
+		{
+			return [pt2[1]-pt1[1],pt1[0]-pt2[0]];
+		}
+		function p_s(pt1, pt2, t)
+		{
+			return [pt1[0] + t*(pt2[0] - pt1[0]), pt1[1] + t*(pt2[1] - pt1[1])];
+		}
+	</script>
+
+<style>
+    canvas {
+        border: 1px dashed black;
+    }
+    .buttons {
+        margin: auto;
+    }
+    .block {
+    text-align: center;
+    display: inline-block;
+    margin: 0 10px 10px 0; /* Отступы */
+    vertical-align: top;
+    }
+</style>
+
+</html>
