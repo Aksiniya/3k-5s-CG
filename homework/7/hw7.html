@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Домашняя работа #7</title>
+</head>
+
+<body>
+    <div class="block">
+        <canvas id="mainCanvas" height="500" width="500"></canvas>
+    </div>
+
+    <div class="block">
+        <h1>Домашняя работа #7</h1>
+        <p>Реализовать алгоритм заполнения произвольного многоугольника методом реберных точек.<br> 
+        С помощью мыши задается произвольный многоугольник.<br>
+        Необходимо заполнить внутреннее пространство многоугольника методом реберных точек.</p> 
+        <h3>Использование:</h3> 
+        <hr>
+        <ul style="text-align: left;">
+            <li>Кнопка "Многоугольник": выбрать точки для многоугольника.</li>
+            <li>Кнопка "Нарисовать": заполнить многоугольник.<br>После нажатия на кнопку нажать внутри канвы.</li>
+        </ul>
+        <hr>
+        <div class = "buttons">
+            <button type="button" id="secondButton" onclick="rectFunction()">Многоугольник</button> 
+            <button type="button" id="secondButton" onclick="drawFunction()">Нарисовать</button>  
+        </div>
+    </div>
+</body> 
+
+<script>
+	var canvas = document.getElementById('mainCanvas');
+	var ctx = canvas.getContext('2d');
+	var buffer=[];
+	
+	function getMousePos(canvas) {
+		return {
+			x: event.clientX - 3,
+			y: event.clientY - 3
+		};
+	}
+	
+	function drawLine(pt1, pt2)
+	{
+        ctx.beginPath()
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "black";
+        ctx.moveTo(pt1[0], pt1[1]);
+        ctx.lineTo(pt2[0], pt2[1]);
+        ctx.stroke();
+	}
+	
+	function fillFigure()
+	{
+		console.log(buffer);
+        buffer = rastFigure();
+		console.log(buffer);
+        for(var i = 0; i < buffer.length - 2; i++)
+        {
+            if(buffer[i][1] == buffer[i+2][1] && buffer[i][1] != buffer[i+3][1]){
+                drawLine(buffer[i],buffer[i+2]);
+                i+=2;
+            }
+            else if(buffer[i][1] == buffer[i+1][1]){
+                drawLine(buffer[i],buffer[i+1]);
+                i++;
+            }
+        }
+	}
+		function oneLine(pt1, pt2)
+		{
+			if(pt1[1] == pt2[1]){return true;}	
+			return false;
+		}
+		function rastFigure()
+		{
+			var poly = [];
+			for(var i = 0; i < buffer.length - 1; i++)
+			{
+				if(!oneLine(buffer[i],buffer[i+1])){
+					poly = poly.concat(restLine(buffer[i],buffer[i+1]));
+				}
+				else {poly.push(buffer[i]);}
+			}
+			if(!oneLine(buffer[buffer.length - 1], buffer[0]))
+			{
+				poly = poly.concat(restLine(buffer[buffer.length - 1], buffer[0]));
+			}
+			return poly.sort(sortFunc);
+		}
+		function restLine(pt1, pt2)
+		{
+			var y = pt1[1],
+			dx = (pt2[0] - pt1[0])/(pt2[1] - pt1[1]),
+			x = pt1[0],
+			poly = [];
+			if(pt1[1] < pt2[1]){
+				while(y <= pt2[1]){
+					poly.push([x,y]);
+					y++;
+					x += dx;
+				}
+			}
+			else{
+				while(y >= pt2[1]){
+					poly.push([x,y]);
+					y--;
+					x -= dx;
+				}
+			}
+			return poly;
+		}
+		function sortFunc(pt1,pt2)
+		{
+			if(pt1[1] > pt2[1]) return 1;
+			if(pt1[1] < pt2[1]) return -1;
+			if(pt1[1] == pt2[1])
+			{
+				if(pt1[0] > pt2[0]) return 1;
+				if(pt1[0] < pt2[0]) return -1;
+				if(pt1[0] == pt2[0]) return 0;
+			}
+		}
+	
+	var rectListener = function(event) {
+		var mousePos = getMousePos(canvas);
+        buffer.push([mousePos.x,mousePos.y]);
+        ctx.fillStyle = "rgb(200,100,200)";
+        ctx.fillRect(mousePos.x-1,mousePos.y-1,3,3);
+		console.log(buffer);
+	}
+	var drawListener = function(event) {
+		console.log(buffer);
+		var tmpBuffer = [];
+		tmpBuffer = buffer;
+		for(var j = 0; j < tmpBuffer.length; j++) {
+			if(j == tmpBuffer.length - 1){
+				tmpBuffer = buffer;
+				drawLine(tmpBuffer[j], tmpBuffer[0]);
+			}
+			else {tmpBuffer = buffer; drawLine(tmpBuffer[j], tmpBuffer[j+1]);}
+		}
+		fillFigure();
+		buffer = [];
+	}
+		
+	
+	
+	function rectFunction() {
+		canvas.removeEventListener('click', drawListener, false);
+		canvas.addEventListener('click', rectListener, false);
+	}
+	function drawFunction() {
+		canvas.removeEventListener('click', rectListener, false);
+		canvas.addEventListener('click', drawListener, false);
+	}
+</script>
+
+<style>
+        canvas {
+            border: 1px dashed black;
+        }
+        .buttons {
+            margin: auto;
+        }
+        .block {
+        text-align: center;
+        display: inline-block;
+        margin: 0 10px 10px 0; /* Отступы */
+        vertical-align: top;
+        }
+</style>
